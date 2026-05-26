@@ -1,0 +1,10 @@
+bin/
+dist/
+*.exe
+*.test
+*.out
+*.pyc
+__pycache__/
+coverage.out
+.DS_Store
+Thumbs.db

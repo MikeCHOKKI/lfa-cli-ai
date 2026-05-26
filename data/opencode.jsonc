@@ -1,0 +1,48 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "general",
+  "skills": {
+    "paths": ["./skills"]
+  },
+  "permission": {
+    "read": "allow",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "edit": "ask",
+    "bash": { "git *": "allow", "*": "ask" },
+    "external_directory": { "~/Projets/**": "allow", "*": "ask" },
+    "skill": "ask"
+  },
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx", "-y", "@modelcontextprotocol/server-filesystem",
+        "/home/ekimart/Projects",
+        "/home/ekimart/PhpstormProjects",
+        "/home/ekimart/IdeaProjects",
+        "/home/ekimart/WebstormProjects",
+        "/home/ekimart/Scripts",
+        "/home/ekimart/lucidforge"
+      ]
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"]
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-fetch"]
+    }
+  }
+}
