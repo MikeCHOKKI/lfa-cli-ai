@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: linux
+            goarch: arm64
+            ext: ""
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: arm64
+            ext: ""
+          - goos: windows
+            goarch: amd64
+            ext: ".exe"
+          - goos: windows
+            goarch: arm64
+            ext: ".exe"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - name: Build
+        run: |
+          export VERSION="${GITHUB_REF_NAME#v}"
+          export BINARY="lfa-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}"
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+            go build -ldflags "-s -w -X github.com/lfa-cli/lfa-cli-ai/cmd.Version=$VERSION" \
+            -o "dist/$BINARY" .
+          cd dist && sha256sum "$BINARY" > "$BINARY.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "lfa-${{ matrix.goos }}-${{ matrix.goarch }}"
+          path: dist/*
+
+  create-release:
+    name: Create Release
+    needs: [goreleaser]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "lfa-*"
+          path: dist
+          merge-multiple: true
+      - name: Prepare release notes
+        run: |
+          {
+            echo "## LFA CLI ${GITHUB_REF_NAME}"
+            echo ""
+            echo "### Binaries"
+            echo ""
+            for f in dist/lfa-*; do
+              name=$(basename "$f")
+              if [[ "$name" != *.sha256 ]]; then
+                echo "- \`$name\`"
+              fi
+            done
+            echo ""
+            echo "### Installation"
+            echo ""
+            echo '```bash'
+            echo 'go install github.com/MikeCHOKKI/lfa-cli-ai@latest'
+            echo '```'
+          } > release-notes.md
+          cat release-notes.md
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: dist/*
+          fail_on_unmatched_files: true
