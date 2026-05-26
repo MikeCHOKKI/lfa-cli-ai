@@ -1,4 +1,4 @@
-module github.com/ekimart/lfa-cli-ai
+module github.com/lfa-cli/lfa-cli-ai
 
 go 1.22
 

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ekimart/lfa-cli-ai/internal/detect"
+	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
 )
 
 type OpenCodeConfig struct {
@@ -22,7 +22,33 @@ func GetConfigPath(o detect.OS) string {
 	return filepath.Join(detect.GetOpenCodeConfigDir(o), "opencode.jsonc")
 }
 
+func expandPath(path string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "~"
+	}
+	if strings.HasPrefix(path, "~/") {
+		return filepath.Join(home, path[2:])
+	}
+	if strings.HasPrefix(path, "${HOME}/") {
+		return filepath.Join(home, path[8:])
+	}
+	return path
+}
+
 func GenerateDefaultConfig() *OpenCodeConfig {
+	home, _ := os.UserHomeDir()
+	user := os.Getenv("USER")
+	if user == "" {
+		user = os.Getenv("USERNAME")
+	}
+	if user == "" {
+		user = "user"
+	}
+	if home == "" {
+		home = filepath.Join("/home", user)
+	}
+
 	return &OpenCodeConfig{
 		Schema:       "https://opencode.ai/config.json",
 		DefaultAgent: "general",
@@ -30,19 +56,69 @@ func GenerateDefaultConfig() *OpenCodeConfig {
 			"paths": []string{"./skills"},
 		},
 		Permission: map[string]any{
-			"read":               "allow",
-			"grep":               "allow",
-			"glob":               "allow",
-			"list":               "allow",
-			"webfetch":           "allow",
-			"websearch":          "allow",
-			"edit":               "ask",
-			"bash":               map[string]any{"git *": "allow", "*": "ask"},
-			"external_directory": map[string]any{"~/Projets/**": "allow", "*": "ask"},
-			"skill":              "ask",
+			"read":      "allow",
+			"grep":      "allow",
+			"glob":      "allow",
+			"list":      "allow",
+			"webfetch":  "allow",
+			"websearch": "allow",
+			"edit":      "ask",
+			"bash":      map[string]any{"git *": "allow", "*": "ask"},
+			"external_directory": map[string]any{
+				filepath.Join(home, "**"): "allow",
+				"*":                      "ask",
+			},
+			"skill": "ask",
 		},
-		MCP: map[string]any{},
+		MCP: map[string]any{
+			"filesystem": map[string]any{
+				"type":    "local",
+				"command": mcpFilesystemCommand(home),
+			},
+			"memory": map[string]any{
+				"type":    "local",
+				"command": []string{"npx", "-y", "@modelcontextprotocol/server-memory"},
+			},
+			"github": map[string]any{
+				"type":    "local",
+				"command": []string{"npx", "-y", "@modelcontextprotocol/server-github"},
+				"environment": map[string]any{
+					"GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
+				},
+			},
+			"fetch": map[string]any{
+				"type":    "local",
+				"command": []string{"uvx", "mcp-server-fetch"},
+			},
+		},
 	}
+}
+
+func mcpFilesystemCommand(home string) []string {
+	dirs := scanExistingProjectDirs(home)
+	if len(dirs) == 0 {
+		dirs = []string{filepath.Join(home, "Projects")}
+	}
+	args := []string{"npx", "-y", "@modelcontextprotocol/server-filesystem"}
+	args = append(args, dirs...)
+	return args
+}
+
+func scanExistingProjectDirs(home string) []string {
+	candidates := []string{
+		"Projects", "projects",
+		"dev", "Dev",
+		"code", "Code",
+		"workspace", "Workspace", "Work", "work",
+	}
+	var found []string
+	for _, d := range candidates {
+		path := filepath.Join(home, d)
+		if info, err := os.Stat(path); err == nil && info.IsDir() {
+			found = append(found, path)
+		}
+	}
+	return found
 }
 
 func LoadExistingConfig(path string) (*OpenCodeConfig, error) {

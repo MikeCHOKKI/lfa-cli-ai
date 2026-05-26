@@ -13,7 +13,7 @@
     "websearch": "allow",
     "edit": "ask",
     "bash": { "git *": "allow", "*": "ask" },
-    "external_directory": { "~/Projets/**": "allow", "*": "ask" },
+    "external_directory": { "${HOME}/**": "allow", "*": "ask" },
     "skill": "ask"
   },
   "mcp": {
@@ -21,12 +21,10 @@
       "type": "local",
       "command": [
         "npx", "-y", "@modelcontextprotocol/server-filesystem",
-        "/home/ekimart/Projects",
-        "/home/ekimart/PhpstormProjects",
-        "/home/ekimart/IdeaProjects",
-        "/home/ekimart/WebstormProjects",
-        "/home/ekimart/Scripts",
-        "/home/ekimart/lucidforge"
+        "${HOME}/Projects",
+        "${HOME}/dev",
+        "${HOME}/code",
+        "${HOME}/workspace"
       ]
     },
     "memory": {

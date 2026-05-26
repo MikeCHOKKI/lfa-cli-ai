@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/ekimart/lfa-cli-ai/internal/detect"
-	"github.com/ekimart/lfa-cli-ai/internal/installer"
-	"github.com/ekimart/lfa-cli-ai/internal/ui"
+	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
+	"github.com/lfa-cli/lfa-cli-ai/internal/installer"
+	"github.com/lfa-cli/lfa-cli-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 

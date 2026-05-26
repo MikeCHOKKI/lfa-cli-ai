@@ -9,10 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
-	"github.com/ekimart/lfa-cli-ai/internal/config"
-	"github.com/ekimart/lfa-cli-ai/internal/detect"
+	"github.com/lfa-cli/lfa-cli-ai/internal/config"
+	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
 )
 
 const DefaultVersion = "0.1.0"
@@ -155,6 +156,8 @@ func DeployConfig(o detect.OS, dataDir string, ollamaEnabled bool) error {
 		config.LinkOllama(cfg)
 	}
 
+	normalizeConfigPaths(cfg)
+
 	if err := config.WriteConfig(cfgPath, cfg); err != nil {
 		return fmt.Errorf("write config: %w", err)
 	}
@@ -173,6 +176,52 @@ func DeployConfig(o detect.OS, dataDir string, ollamaEnabled bool) error {
 
 	fmt.Fprintf(os.Stderr, "Configuration deployed to %s\n", configDir)
 	return nil
+}
+
+func normalizeConfigPaths(cfg *config.OpenCodeConfig) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	// Expand ~ and ${HOME} in external_directory keys
+	if extDir, ok := cfg.Permission["external_directory"]; ok {
+		if edm, ok := extDir.(map[string]any); ok {
+			normalized := make(map[string]any, len(edm))
+			for k, v := range edm {
+				if strings.HasPrefix(k, "~/") {
+					k = filepath.Join(home, k[2:])
+				} else if strings.HasPrefix(k, "${HOME}/") {
+					k = filepath.Join(home, k[8:])
+				}
+				normalized[k] = v
+			}
+			cfg.Permission["external_directory"] = normalized
+		}
+	}
+	// Expand paths in filesystem MCP command arguments
+	if mcp, ok := cfg.MCP["filesystem"]; ok {
+		if mcpMap, ok := mcp.(map[string]any); ok {
+			if cmd, ok := mcpMap["command"]; ok {
+				if args, ok := cmd.([]any); ok {
+					expanded := make([]any, 0, len(args))
+					for _, arg := range args {
+						s, ok := arg.(string)
+						if !ok {
+							expanded = append(expanded, arg)
+							continue
+						}
+						if strings.HasPrefix(s, "~/") {
+							s = filepath.Join(home, s[2:])
+						} else if strings.HasPrefix(s, "${HOME}/") {
+							s = filepath.Join(home, s[8:])
+						}
+						expanded = append(expanded, s)
+					}
+					mcpMap["command"] = expanded
+				}
+			}
+		}
+	}
 }
 
 func deployAgents(configDir string) error {

@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/ekimart/lfa-cli-ai/internal/detect"
-	"github.com/ekimart/lfa-cli-ai/internal/installer"
+	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
+	"github.com/lfa-cli/lfa-cli-ai/internal/installer"
 )
 
 type state int
