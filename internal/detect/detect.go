@@ -56,6 +56,10 @@ func DetectOllama() (bool, bool) {
 	_, err := exec.LookPath("ollama")
 	installed := err == nil
 
+	if !installed {
+		return false, false
+	}
+
 	client := &http.Client{Timeout: 3 * time.Second}
 	resp, err := client.Get("http://localhost:11434/api/tags")
 	if err != nil {

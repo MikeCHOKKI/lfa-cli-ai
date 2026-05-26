@@ -8,3 +8,4 @@ __pycache__/
 coverage.out
 .DS_Store
 Thumbs.db
+.env

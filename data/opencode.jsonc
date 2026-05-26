@@ -20,7 +20,7 @@
     "filesystem": {
       "type": "local",
       "command": [
-        "npx", "-y", "@modelcontextprotocol/server-filesystem",
+        "npx", "-y", "@modelcontextprotocol/server-filesystem@0.6.2",
         "${HOME}/Projects",
         "${HOME}/dev",
         "${HOME}/code",
@@ -29,11 +29,11 @@
     },
     "memory": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"]
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory@0.6.2"]
     },
     "github": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github@0.6.2"],
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
       }

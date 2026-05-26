@@ -77,11 +77,11 @@ func GenerateDefaultConfig() *OpenCodeConfig {
 			},
 			"memory": map[string]any{
 				"type":    "local",
-				"command": []string{"npx", "-y", "@modelcontextprotocol/server-memory"},
+				"command": []string{"npx", "-y", "@modelcontextprotocol/server-memory@0.6.2"},
 			},
 			"github": map[string]any{
 				"type":    "local",
-				"command": []string{"npx", "-y", "@modelcontextprotocol/server-github"},
+				"command": []string{"npx", "-y", "@modelcontextprotocol/server-github@0.6.2"},
 				"environment": map[string]any{
 					"GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
 				},
@@ -99,7 +99,7 @@ func mcpFilesystemCommand(home string) []string {
 	if len(dirs) == 0 {
 		dirs = []string{filepath.Join(home, "Projects")}
 	}
-	args := []string{"npx", "-y", "@modelcontextprotocol/server-filesystem"}
+	args := []string{"npx", "-y", "@modelcontextprotocol/server-filesystem@0.6.2"}
 	args = append(args, dirs...)
 	return args
 }

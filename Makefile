@@ -1,5 +1,5 @@
 BINARY=bin/lfa
-LDFLAGS=-ldflags "-X github.com/lfa-cli/lfa-cli-ai/cmd.Version=0.1.0"
+LDFLAGS=-ldflags "-s -w -X github.com/lfa-cli/lfa-cli-ai/cmd.Version=0.1.0"
 BUILD_CMD=go build $(LDFLAGS) -o $(BINARY)
 
 .PHONY: build test lint coverage cross clean run
