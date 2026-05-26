@@ -17,10 +17,7 @@ jobs:
           go-version: "1.22"
           cache: true
       - run: go vet ./...
-      - uses: dominikh/staticcheck-action@v1
-        with:
-          version: "latest"
-          install-go: false
+      - run: go run honnef.co/go/tools/cmd/staticcheck@v0.6.0 ./...
 
   test:
     name: Tests

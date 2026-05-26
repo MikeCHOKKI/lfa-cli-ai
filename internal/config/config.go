@@ -22,20 +22,6 @@ func GetConfigPath(o detect.OS) string {
 	return filepath.Join(detect.GetOpenCodeConfigDir(o), "opencode.jsonc")
 }
 
-func expandPath(path string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = "~"
-	}
-	if strings.HasPrefix(path, "~/") {
-		return filepath.Join(home, path[2:])
-	}
-	if strings.HasPrefix(path, "${HOME}/") {
-		return filepath.Join(home, path[8:])
-	}
-	return path
-}
-
 func GenerateDefaultConfig() *OpenCodeConfig {
 	home, _ := os.UserHomeDir()
 	user := os.Getenv("USER")

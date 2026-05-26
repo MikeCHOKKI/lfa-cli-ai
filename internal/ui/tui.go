@@ -49,7 +49,6 @@ type model struct {
 	err      error
 
 	detectResult detectDoneMsg
-	ollamaEnable bool
 
 	spinner spinner.Model
 	loading bool
