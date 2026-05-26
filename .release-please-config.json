@@ -1,0 +1,11 @@
+{
+  "release-type": "go",
+  "packages": {
+    ".": {
+      "release-type": "go"
+    }
+  },
+  "plugins": [],
+  "separate-pull-requests": false,
+  "include-component-in-tag": false
+}

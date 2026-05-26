@@ -30,7 +30,9 @@
 
 ## Commits
 - Jamais de `git commit` sans demande explicite
-- Format : `[type(scope)] - Titre court en français`
+- Format : `type(scope): Titre court en français` (conventional commits)
+- Types autorisés : `feat`, `fix`, `refactor`, `ci`, `docs`, `test`, `chore`, `perf`, `secu`
+- Exemple : `feat(config): Ajout du scan des dossiers projets`
 
 ## Sons (notifications)
 - **Autorisation requise** → `printf '\a'` (BIP)
