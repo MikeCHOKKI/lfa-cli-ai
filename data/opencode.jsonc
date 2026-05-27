@@ -41,6 +41,10 @@
     "fetch": {
       "type": "local",
       "command": ["uvx", "mcp-server-fetch@0.1.4"]
+    },
+    "ollama": {
+      "type": "local",
+      "command": ["npx", "-y", "ollama-mcp"]
     }
   }
 }

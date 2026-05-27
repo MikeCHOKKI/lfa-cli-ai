@@ -134,7 +134,7 @@ func WriteConfig(path string, cfg *OpenCodeConfig) error {
 func LinkOllama(cfg *OpenCodeConfig) {
 	cfg.MCP["ollama"] = map[string]any{
 		"type":    "local",
-		"command": []string{"ollama", "serve"},
+		"command": []string{"npx", "-y", "ollama-mcp"},
 	}
 }
 

@@ -49,7 +49,7 @@ func runSetup(ollama bool, dryRun bool) error {
 		return nil
 	}
 
-	if err := installer.DeployConfig(o, installer.DataDir, ollama); err != nil {
+	if err := installer.DeployConfig(o, ollama); err != nil {
 		return err
 	}
 
