@@ -19,7 +19,7 @@ var dashboardCmd = &cobra.Command{
 
 func runNonInteractive() error {
 	yesMode = true
-	return setupCmd.RunE(setupCmd, []string{})
+	return runSetup(true, false)
 }
 
 func init() {

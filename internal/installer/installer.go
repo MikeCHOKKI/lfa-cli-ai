@@ -18,6 +18,7 @@ import (
 
 const DefaultVersion = "0.1.0"
 const opencodeBinName = "opencode"
+const DataDir = "data"
 
 func EnsureDirectories(o detect.OS) error {
 	configDir := detect.GetOpenCodeConfigDir(o)
@@ -108,7 +109,7 @@ func extractBinary(archivePath, destDir string) error {
 	}
 	defer gzr.Close()
 
-	tr := tar.NewReader(gzr)
+	tr := tar.NewReader(io.LimitReader(gzr, 500*1024*1024))
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -230,7 +231,7 @@ func deployAgents(configDir string) error {
 		return err
 	}
 
-	entries, err := os.ReadDir(filepath.Join("data", "agents"))
+	entries, err := os.ReadDir(filepath.Join(DataDir, "agents"))
 	if err != nil {
 		return fmt.Errorf("read agents dir: %w", err)
 	}
@@ -239,7 +240,7 @@ func deployAgents(configDir string) error {
 		if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
 			continue
 		}
-		src := filepath.Join("data", "agents", e.Name())
+		src := filepath.Join(DataDir, "agents", e.Name())
 		dst := filepath.Join(agentsDir, e.Name())
 		data, err := os.ReadFile(src)
 		if err != nil {
@@ -278,7 +279,7 @@ func deploySkills(dataDir, configDir string) error {
 }
 
 func deployAGENTS(configDir string) error {
-	src := filepath.Join("data", "AGENTS.md")
+	src := filepath.Join(DataDir, "AGENTS.md")
 	dst := filepath.Join(configDir, "AGENTS.md")
 	data, err := os.ReadFile(src)
 	if err != nil {

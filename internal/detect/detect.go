@@ -60,7 +60,7 @@ func DetectOllama() (bool, bool) {
 		return false, false
 	}
 
-	client := &http.Client{Timeout: 3 * time.Second}
+	client := &http.Client{Timeout: 1 * time.Second}
 	resp, err := client.Get("http://localhost:11434/api/tags")
 	if err != nil {
 		return installed, false

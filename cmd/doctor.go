@@ -23,65 +23,34 @@ var doctorCmd = &cobra.Command{
 		warn := ui.WarningStyle.Render("~")
 		fail := ui.ErrorStyle.Render("✗")
 
-		var rows []struct {
+		type checkRow struct {
 			check string
 			label string
 			value string
 		}
+		var rows []checkRow
 
-		rows = append(rows, struct {
-			check string
-			label string
-			value string
-		}{check, "OS", o.String()})
+		rows = append(rows, checkRow{check, "OS", o.String()})
 
 		if ocInstalled {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{ok, "OpenCode", ocPath})
+			rows = append(rows, checkRow{ok, "OpenCode", ocPath})
 		} else {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{fail, "OpenCode", "not installed"})
+			rows = append(rows, checkRow{fail, "OpenCode", "not installed"})
 		}
 
 		if ollamaInstalled {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{ok, "Ollama", "installed"})
+			rows = append(rows, checkRow{ok, "Ollama", "installed"})
 		} else {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{warn, "Ollama", "not found"})
+			rows = append(rows, checkRow{warn, "Ollama", "not found"})
 		}
 
 		if ollamaReachable {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{ok, "Ollama API", "reachable"})
+			rows = append(rows, checkRow{ok, "Ollama API", "reachable"})
 		} else {
-			rows = append(rows, struct {
-				check string
-				label string
-				value string
-			}{fail, "Ollama API", "unreachable"})
+			rows = append(rows, checkRow{fail, "Ollama API", "unreachable"})
 		}
 
-		rows = append(rows, struct {
-			check string
-			label string
-			value string
-		}{check, "Config Dir", configDir})
+		rows = append(rows, checkRow{check, "Config Dir", configDir})
 
 		ui.PrintLogo()
 		fmt.Println(ui.TitleStyle.Render(" System Diagnostics"))

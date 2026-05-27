@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
 )
@@ -74,7 +73,7 @@ func GenerateDefaultConfig() *OpenCodeConfig {
 			},
 			"fetch": map[string]any{
 				"type":    "local",
-				"command": []string{"uvx", "mcp-server-fetch"},
+				"command": []string{"uvx", "mcp-server-fetch@0.1.4"},
 			},
 		},
 	}
@@ -137,36 +136,6 @@ func LinkOllama(cfg *OpenCodeConfig) {
 		"type":    "local",
 		"command": []string{"ollama", "serve"},
 	}
-}
-
-func InjectAgents(destDir string, agents []string, readFn func(name string) ([]byte, error)) error {
-	agentsDir := filepath.Join(destDir, "agents")
-	if err := os.MkdirAll(agentsDir, 0755); err != nil {
-		return err
-	}
-	for _, name := range agents {
-		data, err := readFn(name)
-		if err != nil {
-			return fmt.Errorf("read agent %s: %w", name, err)
-		}
-		dst := filepath.Join(agentsDir, name)
-		if !strings.HasSuffix(name, ".md") {
-			dst += ".md"
-		}
-		if err := os.WriteFile(dst, data, 0644); err != nil {
-			return fmt.Errorf("write agent %s: %w", name, err)
-		}
-	}
-	return nil
-}
-
-func InjectSkills(destDir string, skills []string, copyFn func(name, dest string) error) error {
-	for _, name := range skills {
-		if err := copyFn(name, destDir); err != nil {
-			return fmt.Errorf("copy skill %s: %w", name, err)
-		}
-	}
-	return nil
 }
 
 func stripJSONCComments(raw []byte) []byte {

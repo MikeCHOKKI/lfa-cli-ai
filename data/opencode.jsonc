@@ -40,7 +40,7 @@
     },
     "fetch": {
       "type": "local",
-      "command": ["uvx", "mcp-server-fetch"]
+      "command": ["uvx", "mcp-server-fetch@0.1.4"]
     }
   }
 }
