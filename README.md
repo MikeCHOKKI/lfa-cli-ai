@@ -1,5 +1,10 @@
 # LFA CLI — OpenCode AI Configuration Tool
 
+[![CI](https://github.com/MikeCHOKKI/lfa-cli-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/MikeCHOKKI/lfa-cli-ai/actions/workflows/ci.yml)
+[![Release](https://github.com/MikeCHOKKI/lfa-cli-ai/actions/workflows/release.yml/badge.svg)](https://github.com/MikeCHOKKI/lfa-cli-ai/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lfa-cli/lfa-cli-ai)](https://goreportcard.com/report/github.com/lfa-cli/lfa-cli-ai)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 CLI Go qui automatise la détection, l'installation et la configuration d'OpenCode et de ses agents/skills IA.
 
 ## Aperçu
@@ -24,14 +29,16 @@ Ou téléchargez le binaire depuis les [GitHub Releases](https://github.com/Mike
 |----------|-------------|
 | `lfa version` | Affiche la version |
 | `lfa doctor` | Diagnostic système (OS, OpenCode, Ollama, chemins) |
-| `lfa setup [--ollama] [--dry-run]` | Déploie la configuration OpenCode |
+| `lfa setup` | Déploie la configuration OpenCode |
 | `lfa dashboard [-y]` | TUI interactif (ou `-y` pour mode non-interactif) |
 
-### Flags globaux
+### Flags
 
-| Flag | Description |
-|------|-------------|
-| `-y, --yes` | Mode non-interactif (répond oui à tout) |
+| Commande | Flag | Description |
+|----------|------|-------------|
+| `setup` | `--ollama` | Active l'intégration Ollama (par défaut: true) |
+| `setup` | `--dry-run` | Simule sans écrire de fichiers |
+| *(global)* | `-y, --yes` | Mode non-interactif (répond oui à tout) |
 
 ### Exemples
 
@@ -150,6 +157,20 @@ Structure déployée :
 |----------|-------------|--------|
 | `GITHUB_TOKEN` | Token pour le MCP GitHub | Optionnel (requis pour les fonctionnalités GitHub) |
 
+## Sécurité
+
+- Téléchargements via HTTPS uniquement
+- `io.LimitReader` (500 MB) contre les decompression bombs
+- Versions pinnées pour les packages MCP (npx @0.6.2, uvx @0.1.4)
+- Aucun secret hardcodé — tokens via variables d'environnement
+- `.env` exclu du version control
+
+Voir [SECURITY.md](SECURITY.md) pour plus de détails.
+
+## Contribuer
+
+Voir [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-MIT
+MIT — voir [LICENSE](LICENSE).
