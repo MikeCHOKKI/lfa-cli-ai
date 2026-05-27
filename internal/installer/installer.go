@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,7 +19,12 @@ import (
 
 const DefaultVersion = "0.1.0"
 const opencodeBinName = "opencode"
-const DataDir = "data"
+
+var assetsFS fs.FS
+
+func SetAssetsFS(fs fs.FS) {
+	assetsFS = fs
+}
 
 func EnsureDirectories(o detect.OS) error {
 	configDir := detect.GetOpenCodeConfigDir(o)
@@ -137,7 +143,7 @@ func extractBinary(archivePath, destDir string) error {
 	return fmt.Errorf("binary not found in archive")
 }
 
-func DeployConfig(o detect.OS, dataDir string, ollamaEnabled bool) error {
+func DeployConfig(o detect.OS, ollamaEnabled bool) error {
 	if err := EnsureDirectories(o); err != nil {
 		return err
 	}
@@ -167,7 +173,7 @@ func DeployConfig(o detect.OS, dataDir string, ollamaEnabled bool) error {
 		return fmt.Errorf("agents: %w", err)
 	}
 
-	if err := deploySkills(dataDir, configDir); err != nil {
+	if err := deploySkills(configDir); err != nil {
 		return fmt.Errorf("skills: %w", err)
 	}
 
@@ -231,7 +237,7 @@ func deployAgents(configDir string) error {
 		return err
 	}
 
-	entries, err := os.ReadDir(filepath.Join(DataDir, "agents"))
+	entries, err := fs.ReadDir(assetsFS, "agents")
 	if err != nil {
 		return fmt.Errorf("read agents dir: %w", err)
 	}
@@ -240,12 +246,11 @@ func deployAgents(configDir string) error {
 		if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
 			continue
 		}
-		src := filepath.Join(DataDir, "agents", e.Name())
-		dst := filepath.Join(agentsDir, e.Name())
-		data, err := os.ReadFile(src)
+		data, err := fs.ReadFile(assetsFS, "agents/"+e.Name())
 		if err != nil {
 			return fmt.Errorf("read %s: %w", e.Name(), err)
 		}
+		dst := filepath.Join(agentsDir, e.Name())
 		if err := os.WriteFile(dst, data, 0644); err != nil {
 			return fmt.Errorf("write %s: %w", e.Name(), err)
 		}
@@ -253,25 +258,23 @@ func deployAgents(configDir string) error {
 	return nil
 }
 
-func deploySkills(dataDir, configDir string) error {
-	skillsSrc := filepath.Join(dataDir, "skills")
+func deploySkills(configDir string) error {
 	skillsDst := filepath.Join(configDir, "skills")
 	if err := os.MkdirAll(skillsDst, 0755); err != nil {
 		return err
 	}
 
-	entries, err := os.ReadDir(skillsSrc)
+	entries, err := fs.ReadDir(assetsFS, "skills")
 	if err != nil {
 		return fmt.Errorf("read skills dir: %w", err)
 	}
 
 	for _, e := range entries {
-		srcPath := filepath.Join(skillsSrc, e.Name())
-		info, err := os.Stat(srcPath)
-		if err != nil || !info.IsDir() {
+		if !e.IsDir() {
 			continue
 		}
-		if err := copyDir(srcPath, filepath.Join(skillsDst, e.Name())); err != nil {
+		dstPath := filepath.Join(skillsDst, e.Name())
+		if err := copyDirFS("skills/"+e.Name(), dstPath); err != nil {
 			return fmt.Errorf("copy skill %s: %w", e.Name(), err)
 		}
 	}
@@ -279,40 +282,35 @@ func deploySkills(dataDir, configDir string) error {
 }
 
 func deployAGENTS(configDir string) error {
-	src := filepath.Join(DataDir, "AGENTS.md")
-	dst := filepath.Join(configDir, "AGENTS.md")
-	data, err := os.ReadFile(src)
+	data, err := fs.ReadFile(assetsFS, "AGENTS.md")
 	if err != nil {
 		return err
 	}
+	dst := filepath.Join(configDir, "AGENTS.md")
 	return os.WriteFile(dst, data, 0644)
 }
 
-func copyDir(src, dst string) error {
+func copyDirFS(src, dst string) error {
 	if err := os.MkdirAll(dst, 0755); err != nil {
 		return err
 	}
-	entries, err := os.ReadDir(src)
+	entries, err := fs.ReadDir(assetsFS, src)
 	if err != nil {
 		return err
 	}
 	for _, e := range entries {
-		srcPath := filepath.Join(src, e.Name())
+		srcPath := src + "/" + e.Name()
 		dstPath := filepath.Join(dst, e.Name())
-		info, err := os.Stat(srcPath)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			if err := copyDir(srcPath, dstPath); err != nil {
+		if e.IsDir() {
+			if err := copyDirFS(srcPath, dstPath); err != nil {
 				return err
 			}
 		} else {
-			data, err := os.ReadFile(srcPath)
+			data, err := fs.ReadFile(assetsFS, srcPath)
 			if err != nil {
 				return err
 			}
-			if err := os.WriteFile(dstPath, data, info.Mode()); err != nil {
+			if err := os.WriteFile(dstPath, data, 0644); err != nil {
 				return err
 			}
 		}

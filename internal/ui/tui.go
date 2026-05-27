@@ -366,7 +366,7 @@ func startInstallCmd() tea.Cmd {
 func startDeployCmd() tea.Cmd {
 	return func() tea.Msg {
 		o := detect.DetectOS()
-		err := installer.DeployConfig(o, installer.DataDir, true)
+		err := installer.DeployConfig(o, true)
 		return deployDoneMsg{err: err}
 	}
 }

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
   pull_request:
     branches: [main]
 
@@ -16,8 +16,7 @@ jobs:
         with:
           go-version: "1.22"
           cache: true
-      - run: go vet ./...
-      - run: go run honnef.co/go/tools/cmd/staticcheck@v0.6.0 ./...
+      - run: make lint
 
   test:
     name: Tests
@@ -28,7 +27,7 @@ jobs:
         with:
           go-version: "1.22"
           cache: true
-      - run: go test ./... -v
+      - run: make test
 
   build:
     name: Build
@@ -48,10 +47,13 @@ jobs:
       matrix:
         goos: [linux, darwin, windows]
         goarch: [amd64, arm64]
+        include:
+          - goos: windows
+            ext: .exe
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
           cache: true
-      - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags "-s -w" -o /dev/null .
+      - run: make build-matrix GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} EXT="${{ matrix.ext }}"
