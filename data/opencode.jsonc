@@ -2,45 +2,66 @@
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "general",
   "skills": {
-    "paths": ["./skills"]
+    "paths": [
+      "./skills"
+    ]
   },
   "permission": {
-    "read": "allow",
-    "grep": "allow",
-    "glob": "allow",
-    "list": "allow",
-    "webfetch": "allow",
-    "websearch": "allow",
+    "bash": {
+      "*": "ask",
+      "git *": "allow"
+    },
     "edit": "ask",
-    "bash": { "git *": "allow", "*": "ask" },
-    "external_directory": { "${HOME}/**": "allow", "*": "ask" },
-    "skill": "ask"
+    "external_directory": {
+      "*": "ask",
+      "${HOME}/**": "allow"
+    },
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "read": "allow",
+    "skill": "ask",
+    "webfetch": "allow",
+    "websearch": "allow"
   },
   "mcp": {
-    "filesystem": {
-      "type": "local",
+    "fetch": {
       "command": [
-        "npx", "-y", "@modelcontextprotocol/server-filesystem@0.6.2",
+        "uvx",
+        "mcp-server-fetch"
+      ],
+      "type": "local"
+    },
+    "filesystem": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
         "${HOME}/Projects",
         "${HOME}/dev",
         "${HOME}/code",
         "${HOME}/workspace"
-      ]
-    },
-    "memory": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory@0.6.2"]
+      ],
+      "type": "local"
     },
     "github": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github@0.6.2"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      },
+      "type": "local"
     },
-    "fetch": {
-      "type": "local",
-      "command": ["uvx", "mcp-server-fetch@0.1.4"]
+    "memory": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "type": "local"
     },
     "ollama": {
       "type": "local",

@@ -1,7 +1,7 @@
 ---
-description: Checklist de vérification pré-déploiement (staging ou production).
+description: Checklist de vérification pré-déploiement — bloque sur tout item critique avant staging ou production.
 mode: subagent
-model: opencode/big-pickle
+
 temperature: 0.2
 permission:
   edit: deny
@@ -11,22 +11,71 @@ permission:
 ## Usage
 `@deploy staging` · `@deploy production`
 
-## Checklist
+---
 
-### Code & Tests
-- [ ] Tous les tests passent, pas de console.log, build sans erreur
+## Protocole
 
-### Configuration
-- [ ] .env.deploy renseigné, pas de localhost hardcodé, secrets non commités
+### 1 — Collecte
+- Lire `PROJET.md` → stack, variables d'environnement requises, infrastructure cible
+- Lire `docs/deploy-*.md` précédents s'ils existent → problèmes connus
+- Lire `task.md` → items en cours ou bloquants non résolus
 
-### Base de Données
-- [ ] Migrations testées, rollback documenté, backup avant migration
+### 2 — Checklist
 
-### Sécurité
-- [ ] HTTPS, headers (CSP, HSTS, X-Frame-Options), rate limiting
+#### Code & Build
+- [ ] Tous les tests passent (`npm test` / `make test` / équivalent)
+- [ ] Build sans erreur ni warning bloquant
+- [ ] Pas de `console.log`, `var_dump`, `fmt.Println` hors tests
+- [ ] Pas de branche `develop` ou feature non mergée incluse dans le déploiement
 
-### Infrastructure
-- [ ] Health check /health, rollback plan défini
+#### Configuration
+- [ ] `.env.deploy` (ou équivalent) renseigné pour l'environnement cible
+- [ ] Aucune valeur `localhost` hardcodée hors configuration locale
+- [ ] Aucun secret commité dans le repo (`git log --all -S "password"`)
+- [ ] Variables d'environnement requises (depuis `.env.example`) toutes définies
 
-## Rapport
-Générer `docs/deploy-[env]-[DATE].md`. Item critique → BLOQUER le déploiement.
+#### Base de données
+- [ ] Migrations non jouées identifiées et prêtes
+- [ ] Procédure de rollback migration documentée
+- [ ] Backup de la BDD planifié avant migration (production uniquement)
+- [ ] Seeds de production distincts des seeds de développement
+
+#### Sécurité
+- [ ] HTTPS configuré et certificat valide (non expiré)
+- [ ] Headers de sécurité actifs : `CSP`, `HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`
+- [ ] Rate limiting actif sur les endpoints d'authentification
+- [ ] `X-Powered-By` supprimé
+
+#### Infrastructure
+- [ ] Endpoint `/health` (ou équivalent) opérationnel
+- [ ] Rollback plan défini : version précédente identifiée, procédure documentée
+- [ ] Logs applicatifs accessibles et configurés au bon niveau (`info` en prod, pas `debug`)
+- [ ] Alertes (uptime, erreurs 5xx) configurées
+
+### 3 — Rapport
+Générer `docs/deploy-[env]-[DATE].md` :
+
+```markdown
+# Pré-déploiement [ENV] — [DATE]
+
+## Résultat : ✅ AUTORISÉ / ❌ BLOQUÉ
+
+| Domaine | Statut | Items en échec |
+|---------|--------|----------------|
+| Code & Build | ✅/❌ | — |
+| Configuration | ✅/❌ | — |
+| Base de données | ✅/❌ | — |
+| Sécurité | ✅/❌ | — |
+| Infrastructure | ✅/❌ | — |
+
+## Items bloquants
+[Liste des items critiques non validés]
+
+## Actions requises avant déploiement
+1. ...
+```
+
+### 4 — Décision
+- **Un seul item critique en échec** → `❌ DÉPLOIEMENT BLOQUÉ` — lister les actions requises
+- **Tous items critiques validés** → `✅ AUTORISÉ` — noter les warnings non bloquants
+- Production : demander confirmation explicite de l'utilisateur même si tout est vert
