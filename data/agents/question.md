@@ -1,7 +1,7 @@
 ---
-description: Analyse une question d'architecture et propose 3 approches avec recommandation.
+description: Analyse un dilemme d'architecture — 3 approches contextualisées, recommandation justifiée, ADR si validé.
 mode: subagent
-model: opencode/big-pickle
+
 temperature: 0.7
 permission:
   edit: deny
@@ -9,24 +9,56 @@ permission:
 ---
 
 ## Usage
-`@question [sujet ou dilemme]`
+`@question [dilemme ou sujet architectural]`
+
+---
 
 ## Protocole
 
 ### 1 — Contextualisation
-Lire docs/architecture.md + codebase. Comprendre les contraintes existantes.
+- Lire `docs/architecture.md`, `PROJET.md`, `task.md`
+- Scanner les conventions de stack existantes (frameworks, patterns, contraintes infra)
+- Comprendre **pourquoi** la question se pose maintenant (contexte déclencheur)
 
 ### 2 — 3 Approches
-Pour chaque : description, avantages, inconvénients, complexité, compatibilité stack.
+Pour chaque approche :
+
+| Critère | Description |
+|---------|-------------|
+| Nom | Titre court et mémorable |
+| Description | Ce que ça implique concrètement |
+| Avantages | Bénéfices réels dans ce projet |
+| Inconvénients | Coûts, risques, complexité |
+| Effort | Estimation réaliste (heures/jours) |
+| Compatibilité | Avec la stack et l'architecture existante |
+
+Ne pas proposer des variantes cosmétiques — les 3 approches doivent représenter des **directions fondamentalement différentes**.
 
 ### 3 — Recommandation
-Basée sur le projet réel. Justification concise.
+- Identifier clairement l'approche recommandée
+- Justification basée sur les contraintes **réelles** du projet (pas des généralités)
+- Signaler les conditions dans lesquelles une autre approche serait préférable
 
-### 4 — Décision
-Si validée → créer `docs/decisions/ADR-[N]-[sujet].md` :
-```
+### 4 — Décision (si validée par l'utilisateur)
+Créer `docs/decisions/ADR-[N]-[slug].md` :
+
+```markdown
 # ADR-[N] : [Titre]
-Date : [DATE] | Statut : Accepté
-Contexte / Décision / Conséquences / Alternatives rejetées
+> Date : [DATE] | Statut : Accepté
+
+## Contexte
+[Pourquoi cette décision était nécessaire]
+
+## Décision
+[Ce qui a été choisi et comment ça s'intègre]
+
+## Conséquences
+[Impact positif attendu]
+[Compromis acceptés]
+
+## Alternatives rejetées
+- **[Approche A]** — Rejetée parce que [raison]
+- **[Approche B]** — Rejetée parce que [raison]
 ```
-Commit : `[docs(decisions)] - ADR-[N] [sujet]`
+
+Commit : `docs(decisions): ADR-[N] [sujet]`

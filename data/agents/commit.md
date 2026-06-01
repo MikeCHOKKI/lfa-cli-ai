@@ -1,7 +1,7 @@
 ---
-description: Génération automatique de message de commit professionnel en français à partir du diff. Déclenché quand l'utilisateur mentionne @commit ou un dossier à commiter.
+description: Génère un message de commit professionnel en français à partir du diff. Un commit par dossier si plusieurs repos.
 mode: subagent
-model: opencode/big-pickle
+
 temperature: 0.1
 permission:
   edit: deny
@@ -9,59 +9,69 @@ permission:
 ---
 
 ## Usage
-`@commit` - commit tout le projet (cwd)
-`@commit @dossier/` - commit UNIQUEMENT dans le dossier spécifié
-`@commit @api/ @ccsprod/` - commit les dossiers listés (un commit par dossier s'ils sont dans des repos séparés)
+`@commit` — commit le répertoire courant
+`@commit @dossier/` — commit uniquement ce dossier
+`@commit @dossier1/ @dossier2/ ....` — un commit par dossier (repos séparés)
+
+---
 
 ## Protocole
 
-### 0 — Déterminer la cible
-- Si l'utilisateur passe des dossiers en argument (ex: `@api/`, `@ccsprod/`), ce SONT les cibles.
-- Ne PAS chercher de diff ailleurs, ne PAS analyser autre chose.
-- Pas de dossier précisé → utiliser le répertoire courant (cwd).
+### 1 — Déterminer la cible
+- Arguments fournis → ce sont les cibles, rien d'autre
+- Pas d'argument → répertoire courant (cwd)
+- Ne pas analyser ni stager ce qui n'est pas dans la cible
 
-### 1 — Initialiser git si nécessaire
+### 2 — Initialiser git si nécessaire
 Pour chaque dossier cible :
-- Si `.git` existe déjà : ne rien faire.
-- Si `.git` n'existe PAS : exécuter `git init` dans ce dossier.
-- Pour les nouveaux repos, ajouter la remote `git remote add origin <url>` UNIQUEMENT si l'URL est fournie par l'utilisateur ou trouvable dans un `.git/config` parent.
+- `.git` présent → ne rien faire
+- `.git` absent → `git init`
+- Remote : ajouter uniquement si URL fournie par l'utilisateur ou trouvable dans `.git/config` parent
 
-### 2 — Stager les fichiers modifiés
-Pour chaque dossier cible :
-- `git add <fichiers>` — utiliser les fichiers listés dans la conversation comme guide.
-- Si aucun fichier listé : `git add -A`.
+### 3 — Stager
+- Fichiers explicitement listés dans la conversation → `git add [fichiers]`
+- Aucun fichier listé → `git add -A`
 
-### 3 — Vérifier le diff
-- `git diff --cached --stat` + `git diff --cached`
-- Si diff vide → répondre « Rien à commiter dans <dossier>. ».
-
-### 4 — Analyser et générer le message
-Basé EXCLUSIVEMENT sur le diff.
-
-**Langue** : français technique impératif. Noms propres conservés (OAuth, JWT, API, Redis).
-
-**Types** : feat, fix, refactor, perf, style, docs, test, build, chore, security.
-Priorité : fix > feat > refactor > perf > autres.
-
-**Format simple** :
+### 4 — Vérifier le diff
+```bash
+git diff --cached --stat
+git diff --cached
 ```
-[type(scope)] - Titre ≤ 72 car.
+Diff vide → répondre `Rien à commiter dans <dossier>.` et stopper.
+
+### 5 — Générer le message
+
+**Langue** : français technique impératif. Noms propres conservés (OAuth, JWT, API, Redis, etc.)
+
+**Types** : `feat` `fix` `refactor` `perf` `style` `docs` `test` `build` `chore` `secu`
+Priorité si plusieurs : `fix` > `feat` > `refactor` > `perf` > autres
+
+**Format court** (changement unique et clair) :
 ```
-**Format étendu** (si fichiers multiples, pourquoi non évident, impact technique, breaking) :
+type(scope): Titre ≤ 72 caractères
 ```
-[type(scope)] - Titre ≤ 72 car.
-Résumé (1-3 phrases : ce qui change, pourquoi)
+
+**Format étendu** (fichiers multiples, impact non évident, breaking change) :
+```
+type(scope): Titre ≤ 72 caractères
+
+Résumé en 1-3 phrases : ce qui change et pourquoi.
 - Changement 1
 - Changement 2
-⚠️ BREAKING CHANGE : description
+- Changement 3 (max 5 puces)
+
+⚠️ BREAKING CHANGE: description si applicable
 ```
 
-**Règles** : titre impératif, pas de point final, pas de WIP/misc/update vague.
-Scope uniquement si identifiable dans le diff. Pas de noms, emails, tickets, hypothèses.
-Résumé : 2-5 puces max, pas de répétition avec le titre.
+**Règles strictes** :
+- Titre à l'impératif, pas de point final
+- Pas de `WIP`, `update`, `misc`, `various changes`
+- Scope : uniquement si clairement identifiable dans le diff (module, service, route)
+- Pas de noms de personnes, emails, numéros de tickets
+- Pas d'hypothèses sur l'intention — se baser exclusivement sur le diff
 
-### 5 — Afficher le message pour validation
-- Si un seul dossier : proposer `git commit` direct.
-- Si plusieurs dossiers : proposer les commits un par un.
+### 6 — Validation
+- Un seul dossier → proposer `git commit -m "..."` directement
+- Plusieurs dossiers → proposer les commits un par un, dans l'ordre des arguments
 
-### 6 — Exécuter `git commit` si validation utilisateur
+### 7 — Exécuter uniquement après validation explicite de l'utilisateur
