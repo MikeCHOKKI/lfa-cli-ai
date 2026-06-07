@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/MikeCHOKKI/lfa-cli-ai/compare/v0.2.0...v0.3.0) (2026-06-07)
+
+
+### Features
+
+* **core:** Support Windows, notifications, PostgreSQL et tokens ([2ddb2fc](https://github.com/MikeCHOKKI/lfa-cli-ai/commit/2ddb2fcc0abbe39b38275cf960f5ae49a1484de5))
+* **core:** Support Windows, notifications, PostgreSQL et tokens ([1cc5f1e](https://github.com/MikeCHOKKI/lfa-cli-ai/commit/1cc5f1e15d321e8ca1dc0c97ceddd31c1a10366d))
+
 ## [0.2.0](https://github.com/MikeCHOKKI/lfa-cli-ai/compare/v0.1.0...v0.2.0) (2026-06-01)
 
 
