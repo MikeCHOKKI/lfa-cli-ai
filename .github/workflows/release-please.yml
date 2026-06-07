@@ -12,6 +12,20 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Nettoyer branche release-please stale
+        run: |
+          STALE_BRANCH="release-please--branches--main"
+          if git ls-remote --exit-code origin "$STALE_BRANCH" 2>/dev/null; then
+            echo "Suppression de la branche stale $STALE_BRANCH"
+            git push origin --delete "$STALE_BRANCH"
+          else
+            echo "Aucune branche stale détectée"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
       - uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
