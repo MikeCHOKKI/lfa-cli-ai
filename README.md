@@ -10,10 +10,11 @@ CLI Go qui automatise la détection, l'installation et la configuration d'OpenCo
 ## Aperçu
 
 LFA CLI analyse votre système, détecte les outils IA installés (OpenCode, Ollama), puis déploie automatiquement :
-- **22 agents** pré-configurés
-- **18 skills** spécialisés
-- **Configuration MCP** (filesystem, memory, github, fetch, ollama)
+- **23 agents** pré-configurés
+- **26 skills** spécialisés
+- **Configuration MCP** (filesystem, memory, github, fetch, ollama, PostgreSQL)
 - **Permissions** OpenCode adaptées
+- **Notifications multi-plateforme** (Linux, macOS, Windows)
 
 ## Installation
 
@@ -31,6 +32,8 @@ Ou téléchargez le binaire depuis les [GitHub Releases](https://github.com/Mike
 | `lfa doctor` | Diagnostic système (OS, OpenCode, Ollama, chemins) |
 | `lfa setup` | Déploie la configuration OpenCode |
 | `lfa dashboard [-y]` | TUI interactif (ou `-y` pour mode non-interactif) |
+| `lfa info` | Liste les agents et skills déployés |
+| `lfa notify` | Envoie une notification desktop multi-plateforme |
 
 ### Flags
 
@@ -38,6 +41,7 @@ Ou téléchargez le binaire depuis les [GitHub Releases](https://github.com/Mike
 |----------|------|-------------|
 | `setup` | `--ollama` | Active l'intégration Ollama (par défaut: true) |
 | `setup` | `--dry-run` | Simule sans écrire de fichiers |
+| `setup` | `--postgres` | Active PostgreSQL (MCP pg-mcp-server) |
 | *(global)* | `-y, --yes` | Mode non-interactif (répond oui à tout) |
 
 ### Exemples
@@ -67,6 +71,8 @@ lfa-cli-ai/
 │   ├── doctor.go               # lfa doctor
 │   ├── setup.go                # lfa setup
 │   ├── dashboard.go            # lfa dashboard
+│   ├── info.go                 # lfa info
+│   ├── notify.go               # lfa notify
 │   └── setup_shared.go         # Logique partagée setup/dashboard
 ├── internal/
 │   ├── config/
@@ -78,10 +84,12 @@ lfa-cli-ai/
 │   └── ui/
 │       ├── tui.go              # TUI Bubbletea (dashboard interactif)
 │       ├── styles.go           # Thème Lipgloss
-│       └── prompts.go          # Prompts Huh (confirm, select)
+│       ├── prompts.go          # Prompts Huh (confirm, select)
+│       └── notify.go           # Notifications multi-plateforme
 └── data/
-    ├── agents/                 # 22 fichiers .md (agents IA)
-    ├── skills/                 # 18 dossiers (skills spécialisés)
+    ├── agents/                 # 23 fichiers .md (agents IA)
+    ├── skills/                 # 26 dossiers (skills spécialisés)
+    ├── pg-mcp-server/          # Schéma PostgreSQL (init.sql)
     ├── opencode.jsonc          # Template de configuration
     └── AGENTS.md               # Règles globales
 ```
@@ -147,8 +155,9 @@ Structure déployée :
 ~/.config/opencode/
 ├── opencode.jsonc        # Configuration principale
 ├── AGENTS.md             # Règles globales
-├── agents/               # 22 agents .md
-└── skills/               # 18 skills complets
+├── agents/               # 23 agents .md
+├── skills/               # 26 skills complets
+└── pg-mcp-server/        # Schéma PostgreSQL (init.sql)
 ```
 
 ## Variables d'environnement
@@ -156,6 +165,9 @@ Structure déployée :
 | Variable | Description | Requis |
 |----------|-------------|--------|
 | `GITHUB_TOKEN` | Token pour le MCP GitHub | Optionnel (requis pour les fonctionnalités GitHub) |
+| `ANTHROPIC_API_KEY` | Token pour l'API Claude (Anthropic MCP) | Optionnel |
+
+Ces tokens sont demandés interactivement pendant `lfa setup` et stockés dans le bloc `environment` de `opencode.jsonc`.
 
 ## Sécurité
 

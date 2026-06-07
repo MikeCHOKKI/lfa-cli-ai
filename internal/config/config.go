@@ -138,6 +138,88 @@ func LinkOllama(cfg *OpenCodeConfig) {
 	}
 }
 
+func LinkPostgreSQL(cfg *OpenCodeConfig, o detect.OS, host, port, user, password, dbname string) {
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", user, password, host, port, dbname)
+	// Use the OS-specific config directory for the MCP server path
+	pgIndexPath := filepath.Join(detect.GetOpenCodeConfigDir(o), "mcp-servers", "pg-mcp-server", "index.js")
+	cfg.MCP["postgres"] = map[string]any{
+		"type":    "local",
+		"command": []string{"npx", "-y", "tsx", pgIndexPath},
+		"environment": map[string]any{
+			"DATABASE_URL": connStr,
+		},
+	}
+}
+
+// ─── Tokens ──────────────────────────────────────────────────────────────────
+
+type TokenEntry struct {
+	Name        string `json:"name"`
+	EnvVar      string `json:"env_var"`
+	Description string `json:"description"`
+	Required    bool   `json:"required"`
+}
+
+var DefaultTokens = []TokenEntry{
+	{
+		Name:        "GitHub Token",
+		EnvVar:      "GITHUB_TOKEN",
+		Description: "Personal Access Token for GitHub MCP server (repo scope)",
+		Required:    false,
+	},
+	{
+		Name:        "Anthropic API Key",
+		EnvVar:      "ANTHROPIC_API_KEY",
+		Description: "API key for Anthropic Claude models",
+		Required:    false,
+	},
+}
+
+// LinkToken ajoute ou met à jour une variable d'environnement dans un serveur MCP.
+func LinkToken(cfg *OpenCodeConfig, serverKey, envVar, value string) {
+	if value == "" {
+		return
+	}
+	mcp, ok := cfg.MCP[serverKey]
+	if !ok {
+		return
+	}
+	mcpMap, ok := mcp.(map[string]any)
+	if !ok {
+		return
+	}
+	env, ok := mcpMap["environment"].(map[string]any)
+	if !ok || env == nil {
+		env = make(map[string]any)
+		mcpMap["environment"] = env
+	}
+	// Store the expanded value in the config (resolved from env variable)
+	env[envVar] = value
+}
+
+// LinkGitHubToken configure le token GitHub dans la config MCP.
+func LinkGitHubToken(cfg *OpenCodeConfig, token string) {
+	LinkToken(cfg, "github", "GITHUB_PERSONAL_ACCESS_TOKEN", token)
+}
+
+type PGConnection struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DBName   string
+}
+
+func DefaultPGConnection() PGConnection {
+	return PGConnection{
+		Host:     "localhost",
+		Port:     "5432",
+		User:     "postgres",
+		Password: "postgres",
+		DBName:   "opencode_db",
+	}
+}
+
 func stripJSONCComments(raw []byte) []byte {
 	result := make([]byte, 0, len(raw))
 	inString := false

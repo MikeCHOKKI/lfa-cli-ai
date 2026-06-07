@@ -16,6 +16,7 @@ var doctorCmd = &cobra.Command{
 		o := detect.DetectOS()
 		ocInstalled, ocPath := detect.DetectOpenCode()
 		ollamaInstalled, ollamaReachable := detect.DetectOllama()
+		pgStatus := detect.DetectPostgreSQL()
 		configDir := detect.GetOpenCodeConfigDir(o)
 
 		check := ui.AccentStyle.Render("●")
@@ -48,6 +49,18 @@ var doctorCmd = &cobra.Command{
 			rows = append(rows, checkRow{ok, "Ollama API", "reachable"})
 		} else {
 			rows = append(rows, checkRow{fail, "Ollama API", "unreachable"})
+		}
+
+		if pgStatus.Installed {
+			status := "installed"
+			if pgStatus.Running {
+				status = "running"
+			} else {
+				status = "stopped"
+			}
+			rows = append(rows, checkRow{ok, "PostgreSQL", status})
+		} else {
+			rows = append(rows, checkRow{warn, "PostgreSQL", "not installed"})
 		}
 
 		rows = append(rows, checkRow{check, "Config Dir", configDir})

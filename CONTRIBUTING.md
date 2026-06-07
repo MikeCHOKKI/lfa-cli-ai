@@ -16,7 +16,6 @@ Thank you for your interest in contributing to LFA CLI!
 ### Prerequisites
 
 - Go 1.22+
-- Node.js 18+ (for UI)
 
 ### Build
 

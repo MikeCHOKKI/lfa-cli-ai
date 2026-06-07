@@ -1,20 +1,303 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "general",
+
+  // ═══════════════════════════════════════════════════════════════
+  //  Architecture : Orchestrateur multi-agents avec PostgreSQL
+  // ═══════════════════════════════════════════════════════════════
+
+  "default_agent": "orchestrator",
+
+  // ─── Agents spécialisés ───────────────────────────────────────
+  //  mode : "primary" (standalone), "subagent" (@invokable),
+  //         "all" (les deux)
+  // ═══════════════════════════════════════════════════════════════
+
+  "agent": {
+    "orchestrator": {
+      "description": "Agent principal — route les requêtes vers le sous-agent compétent",
+      "mode": "primary",
+      "prompt": "Route la requête vers le @agent adapté. lfa notify avant attente et en fin de tâche."
+    },
+
+    // ── Développement ──
+    "feat": {
+      "mode": "subagent",
+      "description": "Nouvelle fonctionnalité — plan, implémentation, tests",
+      "prompt": "Implémente la feature. Valide le plan avec @question si ambigu. lfa notify avant attente et en fin."
+    },
+    "fix": {
+      "mode": "subagent",
+      "description": "Correction — cause racine, patch, test",
+      "prompt": "Corrige le bug. Identifier la cause racine. Écrire un test reproducteur. lfa notify."
+    },
+    "ui": {
+      "mode": "subagent",
+      "description": "Composant UI — design system, WCAG AA, dark mode",
+      "prompt": "Génère un composant UI. Charger frontend-design. WCAG 2.1 AA, dark mode, responsive. lfa notify."
+    },
+    "test": {
+      "mode": "subagent",
+      "description": "Tests — unitaire, intégration, E2E, AAA",
+      "prompt": "Génère des tests. AAA, mocker les externes. lfa notify."
+    },
+
+    // ── Qualité & Audit ──
+    "audit": {
+      "mode": "subagent",
+      "description": "Audit complet — architecture, qualité, sécurité, perf, tests",
+      "prompt": "Audite le projet complet. Produire rapport avec score et plan priorisé. lfa notify."
+    },
+    "securite": {
+      "mode": "subagent",
+      "description": "Audit sécurité — secrets, CVE, auth, XSS, injection",
+      "prompt": "Audite la sécurité. Vérifier secrets, validation, XSS, SQLi, auth. lfa notify."
+    },
+    "perf": {
+      "mode": "subagent",
+      "description": "Audit performance — N+1, bundle, cache, algo",
+      "prompt": "Audite les performances. Identifier goulots, proposer optimisations. lfa notify."
+    },
+    "verify": {
+      "mode": "subagent",
+      "description": "Vérification — conformité, tests, builds",
+      "prompt": "Vérifie conformité. Tests, lint, build doivent passer. lfa notify."
+    },
+    "conformite": {
+      "mode": "subagent",
+      "description": "Conformité projet — structure, code, commits, sécurité",
+      "prompt": "Vérifie les conventions : structure, nommage, commits, sécurité. lfa notify."
+    },
+
+    // ── Architecture & Documentation ──
+    "question": {
+      "mode": "subagent",
+      "description": "Dilemme architectural — 3 approches, ADR",
+      "prompt": "Analyse le dilemme. 3 approches avec trade-offs. Rédige ADR si validé. lfa notify."
+    },
+    "details": {
+      "mode": "subagent",
+      "description": "Analyse — faisabilité, risques, plan",
+      "prompt": "Analyse approfondie. Faisabilité, risques, plan d'action. lfa notify."
+    },
+    "roadmap": {
+      "mode": "subagent",
+      "description": "Feuille de route — phases, backlog, dette",
+      "prompt": "Génère une roadmap. Phases, sprints, dette technique. lfa notify."
+    },
+    "list": {
+      "mode": "subagent",
+      "description": "Inventaire fonctionnalités → docs/features.md",
+      "prompt": "Scanne le projet. Génère docs/features.md. lfa notify."
+    },
+    "usecases": {
+      "mode": "subagent",
+      "description": "Cas d'utilisation — actors, flux, priorisation",
+      "prompt": "Identifie les use cases. Actors, flux, priorisation. lfa notify."
+    },
+
+    // ── UML ──
+    "uml": {
+      "mode": "subagent",
+      "description": "Dispatcher UML — tout type de diagramme",
+      "prompt": "Génère diagramme UML en Mermaid. Lire le code source. lfa notify."
+    },
+    "sequence": {
+      "mode": "subagent",
+      "description": "Diagramme de séquence — interactions",
+      "prompt": "Trace les interactions entre couches. lfa notify."
+    },
+    "activity": {
+      "mode": "subagent",
+      "description": "Diagramme d'activité — workflow, états",
+      "prompt": "Map les états et transitions du processus. lfa notify."
+    },
+    "classe": {
+      "mode": "subagent",
+      "description": "Diagramme de classes — entités, relations",
+      "prompt": "Extrait les entités et leurs relations du code. lfa notify."
+    },
+
+    // ── Base de données ──
+    "db_schema": {
+      "mode": "subagent",
+      "description": "ERD — entités, relations, cardinalités, index",
+      "prompt": "Génère un ERD en Mermaid depuis le schéma. lfa notify."
+    },
+    "db_migration": {
+      "mode": "subagent",
+      "description": "Migration SQL — UP + DOWN, safe",
+      "prompt": "Crée migration SQL. ALTER TABLE ADD COLUMN IF NOT EXISTS. UP + DOWN. lfa notify."
+    },
+    "db_seed": {
+      "mode": "subagent",
+      "description": "Seeds — données réalistes et cohérentes",
+      "prompt": "Génère des seeds réalistes pour le schéma existant. lfa notify."
+    },
+    "db_audit": {
+      "mode": "subagent",
+      "description": "Audit schéma — index, types, contraintes, normalisation",
+      "prompt": "Audite le schéma DB. Index manquants, types, contraintes. lfa notify."
+    },
+
+    // ── Ops & Workflow ──
+    "init_project": {
+      "mode": "subagent",
+      "description": "Initialisation projet — structure, fichiers, git",
+      "prompt": "Initialise le projet. Charger project-standards. Structure, .gitignore, README. lfa notify."
+    },
+    "commit": {
+      "mode": "subagent",
+      "description": "Message de commit — conventional commits",
+      "prompt": "Génère message depuis le diff. type(scope): Titre en français. lfa notify."
+    },
+    "deploy": {
+      "mode": "subagent",
+      "description": "Checklist pré-déploiement — bloque sur critique",
+      "prompt": "Checklist déploiement. Tests, build, env, migrations. lfa notify."
+    },
+    "reset": {
+      "mode": "subagent",
+      "description": "Réinitialisation du contexte agent",
+      "prompt": "Relire AGENTS.md et opencode.jsonc. Annoncer l'état. lfa notify."
+    },
+
+    // ── Qualité & Logique ──
+    "code": {
+      "mode": "subagent",
+      "description": "Qualité de code — clean code, SOLID, patterns, review",
+      "prompt": "Charge code-quality. Applique clean code, SOLID. Pas de commentaires. lfa notify."
+    },
+    "standards": {
+      "mode": "subagent",
+      "description": "Standards projet — structure, CI/CD, Docker, sécurité",
+      "prompt": "Charge project-standards. Structure, CI/CD, Docker, conventions. lfa notify."
+    },
+
+    // ── Design & Création visuelle ──
+    "svg": {
+      "mode": "subagent",
+      "description": "SVG de qualité — diagramme, logo, art, icône",
+      "prompt": "Génère SVG. Charger svg-art + référence du type demandé. Design system, dark mode, accessibilité. lfa notify."
+    },
+    "mockup": {
+      "mode": "subagent",
+      "description": "Maquette UI — page, dashboard, formulaire",
+      "prompt": "Crée maquette HTML/CSS. Charger mockup-ui. Dark mode, responsive, WCAG AA. lfa notify."
+    },
+    "poster": {
+      "mode": "subagent",
+      "description": "Affiche, bannière, poster — format viewBox 680×960",
+      "prompt": "Crée un poster SVG. Charger svg-art (art.md). lfa notify."
+    },
+    "animation": {
+      "mode": "subagent",
+      "description": "Animation CSS/SVG — micro-interaction, loader, scroll",
+      "prompt": "Crée animation. Charger animation. Easing, perf, prefers-reduced-motion. lfa notify."
+    },
+    "palette": {
+      "mode": "subagent",
+      "description": "Palette de couleurs — harmonie, WCAG, tokens",
+      "prompt": "Génère palette + tokens. Charger design-system. WCAG AA, 9 stops, typo, spacing. lfa notify."
+    },
+    "import": {
+      "mode": "subagent",
+      "description": "Import Figma → code fidèle (via MCP)",
+      "prompt": "Transforme design Figma en code. Utiliser figma_get_file pour récupérer le design via MCP, puis charger design-import + design-system. Pixel-perfect, tous états. lfa notify."
+    }
+  },
+
+  // ─── Skills (domaines) ─────────────────────────────────────────
+
   "skills": {
     "paths": [
       "./skills"
     ]
   },
+
+  // ─── LSP Servers ──────────────────────────────────────────────
+
+  "lsp": {
+    "gopls": {
+      "command": ["gopls"],
+      "extensions": [".go"]
+    },
+    "typescript": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"]
+    },
+    "pyright": {
+      "command": ["pyright-langserver", "--stdio"],
+      "extensions": [".py", ".pyi"]
+    },
+    "jdtls": {
+      "command": ["jdtls"],
+      "extensions": [".java"]
+    },
+    "kotlin-ls": {
+      "command": ["kotlin-language-server"],
+      "extensions": [".kt", ".kts"]
+    },
+    "dart": {
+      "command": ["dart", "language-server"],
+      "extensions": [".dart"]
+    },
+    "php": {
+      "command": ["intelephense", "--stdio"],
+      "extensions": [".php", ".phtml"]
+    },
+    "docker": {
+      "command": ["docker-langserver", "--stdio"],
+      "extensions": [".dockerfile", ".Dockerfile", "Dockerfile"]
+    },
+    "angular": {
+      "command": ["ngserver", "--stdio"],
+      "extensions": [".html"],
+      "initialization": {
+        "typescript": {
+          "tsdk": "./node_modules/typescript/lib"
+        }
+      }
+    },
+    "yaml-ls": {
+      "command": ["yaml-language-server", "--stdio"],
+      "extensions": [".yaml", ".yml"]
+    },
+    "bash": {
+      "command": ["bash-language-server", "start"],
+      "extensions": [".sh", ".bash", ".zsh"]
+    }
+  },
+
+  // ─── Permissions ──────────────────────────────────────────────
+
   "permission": {
     "bash": {
       "*": "ask",
-      "git *": "allow"
+      "git *": "allow",
+      "lfa notify *": "allow",
+      "go build *": "allow",
+      "go test *": "allow",
+      "go run *": "allow",
+      "go vet *": "allow",
+      "docker *": "ask",
+      "npx *": "ask",
+      "psql *": "ask",
+      "npm *": "ask",
+      "pip *": "ask",
+      "brew *": "ask",
+      "apt-get *": "ask",
+      "apt *": "ask",
+      "node *": "ask"
     },
     "edit": "ask",
     "external_directory": {
       "*": "ask",
-      "${HOME}/**": "allow"
+      "${HOME}/Projects/**": "allow",
+      "${HOME}/dev/**": "allow",
+      "${HOME}/code/**": "allow",
+      "${HOME}/workspace/**": "allow",
+      "${HOME}/.config/opencode/**": "allow",
+      "/tmp/opencode/**": "allow"
     },
     "glob": "allow",
     "grep": "allow",
@@ -24,48 +307,53 @@
     "webfetch": "allow",
     "websearch": "allow"
   },
+
+  // ─── MCP Servers ──────────────────────────────────────────────
+
   "mcp": {
     "fetch": {
-      "command": [
-        "uvx",
-        "mcp-server-fetch"
-      ],
+      "command": ["uvx", "mcp-server-fetch"],
       "type": "local"
     },
     "filesystem": {
       "command": [
-        "npx",
-        "-y",
+        "npx", "-y",
         "@modelcontextprotocol/server-filesystem",
         "${HOME}/Projects",
         "${HOME}/dev",
         "${HOME}/code",
-        "${HOME}/workspace"
+        "${HOME}/workspace",
+        "${HOME}/.config/opencode"
       ],
       "type": "local"
     },
     "github": {
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      },
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "environment": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" },
       "type": "local"
     },
     "memory": {
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
       "type": "local"
     },
     "ollama": {
-      "type": "local",
-      "command": ["npx", "-y", "ollama-mcp"]
+      "command": ["npx", "-y", "ollama-mcp"],
+      "type": "local"
+    },
+    "postgres": {
+      "command": ["npx", "-y", "tsx", "${HOME}/.config/opencode/mcp-servers/pg-mcp-server/index.js"],
+      "environment": {
+        "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/opencode_db"
+      },
+      "type": "local"
+    },
+    "playwright": {
+      "command": ["npx", "-y", "@playwright/mcp"],
+      "type": "local"
+    },
+    "sequential-thinking": {
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "type": "local"
     }
   }
 }

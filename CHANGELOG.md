@@ -25,6 +25,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `install.bat` et `install.ps1` — scripts d'installation pour Windows (cmd.exe et PowerShell)
+- `lfa notify` — commande de notification desktop multi-plateforme (notify-send, osascript, PowerShell)
+- `lfa setup --postgres` — option pour activer PostgreSQL et déployer le schéma MCP
+- `LinkToken()` / `LinkGitHubToken()` — configuration interactive des tokens pendant le setup
+- `InitPGSchema()` — initialisation automatique du schéma PostgreSQL (8 tables, index, fonctions)
+- Support complet de Windows : téléchargement .zip, extraction zip, détection PATH via reg query
+- `data/pg-mcp-server/init.sql` — schéma PostgreSQL (projects, entities, relations, tasks, adrs, design_tokens, conversations, code_findings)
+- Notifications multi-plateforme dans `internal/ui/notify.go`
+
+### Changed
+- `notify-send` → `lfa notify` dans tous les prompts agents (AGENTS.md, opencode.jsonc)
+- `GetOpenCodeDownloadURL()` corrigé : tiret séparateur, `x64` pour amd64, `.zip` pour Windows/macOS
+- `normalizeConfigPaths()` gère `%USERPROFILE%`, `%APPDATA%`, `%LOCALAPPDATA%` pour Windows
+- `IsPostgreSQLSupported()` retourne `true` pour Windows
+- `LinkPostgreSQL()` utilise `detect.GetOpenCodeConfigDir()` au lieu du chemin hardcodé
+- `extractBinary()` dédoublé en `extractBinaryTarGz()` + `extractBinaryZip()` avec `archive/zip`
+- `InstallOpenCode()` résout dynamiquement "latest" via GitHub API
+- `Makefile` release copie les scripts d'install (install.sh, install.bat, install.ps1) dans bin/
+- Agents: 22 → 23, Skills: 18 → 26
+- URLs GitHub unifiées vers `MikeCHOKKI/lfa-cli-ai` dans l'UI
+- Documentation README, CHANGELOG, CONTRIBUTING mises à jour
+
 ## [0.1.0] - 2026-05-27
 
 ### Added

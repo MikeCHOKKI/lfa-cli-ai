@@ -2,11 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/lfa-cli/lfa-cli-ai/internal/config"
 	"github.com/lfa-cli/lfa-cli-ai/internal/detect"
 	"github.com/lfa-cli/lfa-cli-ai/internal/installer"
 )
@@ -20,6 +22,7 @@ const (
 	stateDetect
 	stateInstallPrompt
 	stateInstall
+	statePGSetup
 	stateDeploy
 	stateDone
 	stateError
@@ -30,6 +33,9 @@ type detectDoneMsg struct {
 	ocPath          string
 	ollamaInstalled bool
 	ollamaReachable bool
+	pgInstalled     bool
+	pgRunning       bool
+	pgVersion       string
 }
 
 type installDoneMsg struct {
@@ -49,6 +55,12 @@ type model struct {
 	err      error
 
 	detectResult detectDoneMsg
+	pgHost       string
+	pgPort       string
+	pgUser       string
+	pgPassword   string
+	pgDBName     string
+	pgInputField int // 0=host, 1=port, 2=user, 3=password, 4=dbname
 
 	spinner spinner.Model
 	loading bool
@@ -93,6 +105,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.handleUp()
 		case "down", "j":
 			return m.handleDown()
+		case "backspace":
+			if m.state == statePGSetup {
+				return m.handlePGDelete()
+			}
+		default:
+			if m.state == statePGSetup {
+				return m.handlePGInput(msg.String())
+			}
 		}
 
 	case detectDoneMsg:
@@ -111,10 +131,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.state = stateError
 			return m, nil
 		}
-		if m.autoMode {
-			return m.startDeploy()
-		}
-		return m, startDeployCmd()
+		return m.startPGSetup()
 
 	case deployDoneMsg:
 		m.loading = false
@@ -150,6 +167,8 @@ func (m *model) handleEnter() (tea.Model, tea.Cmd) {
 		return m, startDetectCmd()
 	case stateInstallPrompt:
 		return m.startInstall()
+	case statePGSetup:
+		return m.startDeploy()
 	case stateDeploy:
 		return m.startDeploy()
 	case stateDone:
@@ -161,15 +180,64 @@ func (m *model) handleEnter() (tea.Model, tea.Cmd) {
 }
 
 func (m *model) handleUp() (tea.Model, tea.Cmd) {
-	if m.state == stateModeSelect && m.cursor > 0 {
-		m.cursor--
+	switch m.state {
+	case stateModeSelect:
+		if m.cursor > 0 {
+			m.cursor--
+		}
+	case statePGSetup:
+		if m.pgInputField > 0 {
+			m.pgInputField--
+		}
 	}
 	return m, nil
 }
 
 func (m *model) handleDown() (tea.Model, tea.Cmd) {
-	if m.state == stateModeSelect && m.cursor < 1 {
-		m.cursor++
+	switch m.state {
+	case stateModeSelect:
+		if m.cursor < 1 {
+			m.cursor++
+		}
+	case statePGSetup:
+		if m.pgInputField < 4 {
+			m.pgInputField++
+		}
+	}
+	return m, nil
+}
+
+func (m *model) handlePGDelete() (tea.Model, tea.Cmd) {
+	switch m.pgInputField {
+	case 0:
+		if len(m.pgHost) > 0 { m.pgHost = m.pgHost[:len(m.pgHost)-1] }
+	case 1:
+		if len(m.pgPort) > 0 { m.pgPort = m.pgPort[:len(m.pgPort)-1] }
+	case 2:
+		if len(m.pgUser) > 0 { m.pgUser = m.pgUser[:len(m.pgUser)-1] }
+	case 3:
+		if len(m.pgPassword) > 0 { m.pgPassword = m.pgPassword[:len(m.pgPassword)-1] }
+	case 4:
+		if len(m.pgDBName) > 0 { m.pgDBName = m.pgDBName[:len(m.pgDBName)-1] }
+	}
+	return m, nil
+}
+
+func (m *model) handlePGInput(key string) (tea.Model, tea.Cmd) {
+	if len(key) != 1 || key[0] < 32 || key[0] > 126 {
+		return m, nil
+	}
+	switch m.pgInputField {
+	case 0:
+		m.pgHost += key
+	case 1:
+		m.pgPort += key
+	case 2:
+		m.pgUser += key
+	case 3:
+		m.pgPassword += key
+	case 4:
+		m.pgDBName += key
 	}
 	return m, nil
 }
@@ -177,17 +245,36 @@ func (m *model) handleDown() (tea.Model, tea.Cmd) {
 func (m *model) startInstall() (tea.Model, tea.Cmd) {
 	ocInstalled, _ := detect.DetectOpenCode()
 	if ocInstalled {
-		return m, startDeployCmd()
+		return m.startPGSetup()
 	}
 	m.state = stateInstall
 	m.loading = true
 	return m, startInstallCmd()
 }
 
+func (m *model) startPGSetup() (tea.Model, tea.Cmd) {
+	if m.autoMode {
+		m.pgHost = "localhost"
+		m.pgPort = "5432"
+		m.pgUser = "postgres"
+		m.pgPassword = "postgres"
+		m.pgDBName = "opencode_db"
+		return m, startDeployCmdWithPG(m.pgHost, m.pgPort, m.pgUser, m.pgPassword, m.pgDBName)
+	}
+	m.state = statePGSetup
+	m.pgInputField = 0
+	m.pgHost = "localhost"
+	m.pgPort = "5432"
+	m.pgUser = "postgres"
+	m.pgPassword = "postgres"
+	m.pgDBName = "opencode_db"
+	return m, nil
+}
+
 func (m *model) startDeploy() (tea.Model, tea.Cmd) {
 	m.state = stateDeploy
 	m.loading = true
-	return m, startDeployCmd()
+	return m, startDeployCmdWithPG(m.pgHost, m.pgPort, m.pgUser, m.pgPassword, m.pgDBName)
 }
 
 func (m model) View() string {
@@ -202,6 +289,8 @@ func (m model) View() string {
 		return m.installPromptView()
 	case stateInstall:
 		return m.installView()
+	case statePGSetup:
+		return m.pgSetupView()
 	case stateDeploy:
 		return m.deployView()
 	case stateDone:
@@ -275,6 +364,17 @@ func (m model) detectView() string {
 			b.WriteString(fmt.Sprintf("  Ollama API: %s %s\n", cross, DimStyle.Render("unreachable")))
 		}
 
+		if m.detectResult.pgInstalled {
+			b.WriteString(fmt.Sprintf("  PostgreSQL: %s %s", check, DimStyle.Render("installed")))
+			if m.detectResult.pgRunning {
+				b.WriteString(fmt.Sprintf(" %s\n", SuccessStyle.Render("(running)")))
+			} else {
+				b.WriteString(fmt.Sprintf(" %s\n", WarningStyle.Render("(stopped)")))
+			}
+		} else {
+			b.WriteString(fmt.Sprintf("  PostgreSQL: %s %s\n", WarningStyle.Render("~"), DimStyle.Render("not installed")))
+		}
+
 		b.WriteString(DimStyle.Render("\n  Press Enter to continue..."))
 	}
 
@@ -296,6 +396,41 @@ func (m model) installPromptView() string {
 		b.WriteString(DimStyle.Render("\n  Press Enter to continue..."))
 	}
 
+	return AppStyle.Render(b.String())
+}
+
+func (m model) pgSetupView() string {
+	var b strings.Builder
+	b.WriteString(TitleStyle.Render(" PostgreSQL Configuration"))
+	b.WriteString("\n\n")
+	b.WriteString(TextStyle.Render("  Configure your PostgreSQL connection:"))
+	b.WriteString("\n\n")
+
+	fields := []struct {
+		label string
+		value string
+	}{
+		{"Host", m.pgHost},
+		{"Port", m.pgPort},
+		{"User", m.pgUser},
+		{"Password", m.pgPassword},
+		{"Database", m.pgDBName},
+	}
+
+	for i, f := range fields {
+		cursor := "  "
+		if m.pgInputField == i {
+			cursor = "▸ "
+			b.WriteString(AccentStyle.Render(cursor + f.label + ": "))
+			b.WriteString(AccentStyle.Render(f.value + "█"))
+		} else {
+			b.WriteString(DimStyle.Render(cursor + f.label + ": "))
+			b.WriteString(TextStyle.Render(f.value))
+		}
+		b.WriteString("\n\n")
+	}
+
+	b.WriteString(DimStyle.Render("\n  ↑/↓ navigate • Enter confirm • Type to edit • q quit"))
 	return AppStyle.Render(b.String())
 }
 
@@ -346,11 +481,15 @@ func startDetectCmd() tea.Cmd {
 	return func() tea.Msg {
 		ocInstalled, ocPath := detect.DetectOpenCode()
 		ollamaInstalled, ollamaReachable := detect.DetectOllama()
+		pgStatus := detect.DetectPostgreSQL()
 		return detectDoneMsg{
 			ocInstalled:     ocInstalled,
 			ocPath:          ocPath,
 			ollamaInstalled: ollamaInstalled,
 			ollamaReachable: ollamaReachable,
+			pgInstalled:     pgStatus.Installed,
+			pgRunning:       pgStatus.Running,
+			pgVersion:       pgStatus.Version,
 		}
 	}
 }
@@ -368,5 +507,48 @@ func startDeployCmd() tea.Cmd {
 		o := detect.DetectOS()
 		err := installer.DeployConfig(o, true)
 		return deployDoneMsg{err: err}
+	}
+}
+
+func startDeployCmdWithPG(host, port, user, password, dbname string) tea.Cmd {
+	return func() tea.Msg {
+		o := detect.DetectOS()
+		configDir := detect.GetOpenCodeConfigDir(o)
+
+		if err := installer.DeployConfig(o, true); err != nil {
+			return deployDoneMsg{err: err}
+		}
+
+		if host == "" {
+			return deployDoneMsg{err: nil}
+		}
+
+		conn := config.PGConnection{Host: host, Port: port, User: user, Password: password, DBName: dbname}
+
+		if dplyErr := installer.DeployPGMcpServer(configDir, conn); dplyErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: PG MCP deploy: %v\n", dplyErr)
+		}
+
+		// Initialize PostgreSQL schema
+		if err := installer.InitPGSchema(conn); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: PG schema init: %v\n", err)
+		}
+
+		cfgPath := config.GetConfigPath(o)
+		cfg, cfgErr := config.LoadExistingConfig(cfgPath)
+		if cfgErr == nil {
+			config.LinkPostgreSQL(cfg, o, conn.Host, conn.Port, conn.User, conn.Password, conn.DBName)
+
+			// Also pick up tokens from env if present
+			if val := os.Getenv("GITHUB_TOKEN"); val != "" {
+				config.LinkToken(cfg, "github", "GITHUB_PERSONAL_ACCESS_TOKEN", val)
+			}
+
+			if wErr := config.WriteConfig(cfgPath, cfg); wErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: write PG config: %v\n", wErr)
+			}
+		}
+
+		return deployDoneMsg{err: nil}
 	}
 }
