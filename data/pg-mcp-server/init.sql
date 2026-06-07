@@ -129,7 +129,7 @@ CREATE INDEX IF NOT EXISTS idx_findings_status    ON code_findings(status);
 
 -- search_entities: recherche plein texte dans les entités et leurs observations
 CREATE OR REPLACE FUNCTION search_entities(
-    p_project_id INTEGER,
+    p_project_id UUID,
     p_query      TEXT,
     p_limit      INTEGER DEFAULT 10
 ) RETURNS TABLE(
@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION search_entities(
 $$;
 
 -- project_dashboard: tableau de bord complet d'un projet
-CREATE OR REPLACE FUNCTION project_dashboard(p_project_id INTEGER)
+CREATE OR REPLACE FUNCTION project_dashboard(p_project_id UUID)
 RETURNS JSONB LANGUAGE SQL STABLE AS $$
     SELECT jsonb_build_object(
         'project',       row_to_json(p.*),
