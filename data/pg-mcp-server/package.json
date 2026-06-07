@@ -1,0 +1,11 @@
+{
+  "name": "pg-mcp-server",
+  "version": "2.0.0",
+  "description": "MCP server PostgreSQL pour OpenCode — mémoire persistante, projets, tâches, ADR, design tokens",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.8"
+  }
+}

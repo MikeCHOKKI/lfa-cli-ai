@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -102,8 +103,73 @@ func GetArch() string {
 }
 
 func GetOpenCodeDownloadURL(o OS, arch, version string) string {
+	// Map Go arch names to OpenCode release naming
+	ocArch := arch
+	if ocArch == "amd64" {
+		ocArch = "x64"
+	}
+	// Linux uses .tar.gz, Darwin and Windows use .zip
+	ext := ".tar.gz"
+	if o == Windows || o == Darwin {
+		ext = ".zip"
+	}
 	return fmt.Sprintf(
-		"https://github.com/anomalyco/opencode/releases/download/v%s/opencode_%s_%s.tar.gz",
-		version, o.String(), arch,
+		"https://github.com/anomalyco/opencode/releases/download/v%s/opencode-%s-%s%s",
+		version, o.String(), ocArch, ext,
 	)
+}
+
+// ─── PostgreSQL ──────────────────────────────────────────────────────────────
+
+type PGStatus struct {
+	Installed    bool
+	Running      bool
+	Version      string
+}
+
+func DetectPostgreSQL() PGStatus {
+	status := PGStatus{}
+
+	// Check if psql is installed
+	psqlPath, err := exec.LookPath("psql")
+	if err != nil {
+		return status
+	}
+	status.Installed = true
+
+	// Get version
+	out, err := exec.Command(psqlPath, "--version").Output()
+	if err == nil {
+		status.Version = strings.TrimSpace(string(out))
+	}
+
+	// Check if PostgreSQL is running (try to connect to default socket)
+	pgIsReady, err := exec.LookPath("pg_isready")
+	if err == nil {
+		if err := exec.Command(pgIsReady, "-q").Run(); err == nil {
+			status.Running = true
+		}
+	} else {
+		// Fallback: try connecting with psql
+		err := exec.Command(psqlPath, "-h", "localhost", "-U", "postgres", "-c", "SELECT 1").Run()
+		status.Running = err == nil
+	}
+
+	return status
+}
+
+func DetectPostgreSQLConnectivity(host, port, user, password, dbname string) bool {
+	// Use PG environment variables for the check
+	cmd := exec.Command("psql", "-h", host, "-p", port, "-U", user, "-d", dbname, "-c", "SELECT 1")
+	cmd.Env = append(cmd.Env, "PGPASSWORD="+password)
+	return cmd.Run() == nil
+}
+
+func IsPostgreSQLSupported(o OS) bool {
+	switch o {
+	case Linux, Darwin, Windows:
+		return true
+	default:
+		return false
+	}
 }

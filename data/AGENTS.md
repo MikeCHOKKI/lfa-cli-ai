@@ -62,22 +62,21 @@
 
 ---
 
-## Notifications
+## Notifications — OBLIGATOIRE (ne jamais ignorer)
 
-- Tâche terminée → `notify-send "OpenCode" "Tâche terminée"` (notification bureau)
-- Demande d'autorisation → `notify-send "OpenCode" "Action requise"`
+> ⚠️ **RÈGLE ABSOULUE** : tout agent DOIT exécuter ces commandes sans exception.
+
+- **Fin de tâche** : `lfa notify "OpenCode" "Tâche terminée"` après la dernière action
+- **Action requise** : `lfa notify "OpenCode" "Action requise"` **AVANT** d'attendre une réponse humaine
+- **Erreur bloquante** : `lfa notify "OpenCode" "Erreur bloquante: <description courte>"`
+
+Ces `lfa notify` sont déjà autorisés par la config (permission: allow). Multi-plateforme : notify-send (Linux), osascript (macOS), PowerShell (Windows). Aucune excuse pour les sauter.
 
 ## Commits
 
 - Jamais de `git commit` sans demande explicite
 - Format : `type(scope): Titre court en français` (conventional commits)
 - Types autorisés : `feat`, `fix`, `refactor`, `ci`, `docs`, `test`, `chore`, `perf`, `secu`
-- Exemples :
-  - `feat(auth): Ajout du flux de réinitialisation de mot de passe`
-  - `fix(api): Correction de la pagination sur /products`
-  - `secu(deps): Mise à jour lodash suite CVE-2024-XXXX`
-
----
 
 ## Sécurité
 
@@ -87,56 +86,9 @@
 
 ---
 
----
-
 ## Sous-agents disponibles
 
-### Développement
-| Commande              | Rôle                                                               |
-|-----------------------|--------------------------------------------------------------------|
-| `@feat [description]` | Nouvelle fonctionnalité — plan validé, implémentation incrémentale |
-| `@fix [bug/erreur]`   | Correction ciblée — cause racine, plan minimal, vérification       |
-| `@ui [composant]`     | Composant UI — designer mindset, conforme au design system         |
-| `@test [module]`      | Tests unitaires, intégration, E2E — couverture complète            |
+La liste complète des agents et leurs descriptions est dans `opencode.jsonc` (section `agent`).
+Les agents principaux : @feat, @fix, @ui, @test, @audit, @code, @standards, @svg, @mockup, @poster, @animation, @palette, @import, @question, @reset, @commit, @deploy, @verify.
 
-### Qualité & Audit
-| Commande          | Rôle                                                                |
-|-------------------|---------------------------------------------------------------------|
-| `@audit [scope]`  | Audit complet — architecture, qualité, sécurité, performance, tests |
-| `@securite`       | Audit sécurité — secrets, CVE, auth, validation, BDD, headers       |
-| `@perf [scope]`   | Audit performance — N+1, bundle, algorithmes, cache                 |
-| `@verify [scope]` | Vérification fonctionnelle, technique et conformité                 |
-| `@conformite`     | Conformité projet — structure, code, commits, sécurité de base      |
-
-### Architecture & Documentation
-| Commande              | Rôle                                                            |
-|-----------------------|-----------------------------------------------------------------|
-| `@question [dilemme]` | Dilemme architectural — 3 approches, recommandation, ADR        |
-| `@details [sujet]`    | Analyse approfondie — faisabilité, risques, plan d'action       |
-| `@roadmap`            | Feuille de route — phases, sprint, backlog, dette technique     |
-| `@list`               | Inventaire des fonctionnalités → `docs/features.md`             |
-| `@usecases [module]`  | Cas d'utilisation — identification, priorisation, documentation |
-
-### UML
-| Commande                | Rôle                                                              |
-|-------------------------|-------------------------------------------------------------------|
-| `@uml [type] [module]`  | Dispatcher UML — séquence, activité, composant, déploiement, état |
-| `@sequence [flux]`      | Diagramme de séquence — interactions système basées sur le code   |
-| `@activity [processus]` | Diagramme d'activité — workflows et processus métier              |
-| `@classe [module]`      | Diagramme de classes — entités, relations, stéréotypes            |
-
-### Base de données
-| Commande               | Rôle                         |
-|------------------------|------------------------------|
-| `@db schema`           | ERD depuis les modèles       |
-| `@db migration [desc]` | Migration SQL avec UP/DOWN   |
-| `@db seed [module]`    | Seeds réalistes et cohérents |
-| `@db audit`            | Audit qualité du schéma      |
-
-### Ops & Workflow
-| Commande                        | Rôle                                                          |
-|---------------------------------|---------------------------------------------------------------|
-| `@init [description]`           | Initialisation projet — structure, fichiers, git, conventions |
-| `@commit`                       | Message de commit professionnel depuis le diff                |
-| `@deploy [staging\|production]` | Checklist pré-déploiement — bloque sur item critique          |
-| `@reset`                        | Réinitialisation du contexte agent                            |
+Pour la délégation avancée, charger le skill `delegation`.

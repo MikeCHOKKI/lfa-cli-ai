@@ -34,6 +34,12 @@ cross: clean
 
 release: cross
 	cd bin && sha256sum lfa-* > checksums.txt
+	cp install.sh bin/
+	cp install.bat bin/
+	cp install.ps1 bin/
+	cp install.sh bin/install-unix.sh
+	cp install.bat bin/install-windows.bat
+	cp install.ps1 bin/install-windows.ps1
 	@echo "Release v$(VERSION) ready:"
 	@ls -lh bin/
 

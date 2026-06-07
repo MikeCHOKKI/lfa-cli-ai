@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="lfa-cli/lfa-cli-ai"
+REPO="MikeCHOKKI/lfa-cli-ai"
 VERSION="${1:-latest}"
 BINARY="lfa"
 

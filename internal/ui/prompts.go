@@ -96,12 +96,29 @@ func cyberTheme() *huh.Theme {
 	return t
 }
 
+func InputPrompt(title, placeholder, defaultValue string) (string, error) {
+	var result string
+	err := huh.NewInput().
+		Title(title).
+		Placeholder(placeholder).
+		Value(&result).
+		WithTheme(cyberTheme()).
+		Run()
+	if err != nil {
+		return defaultValue, err
+	}
+	if result == "" {
+		return defaultValue, nil
+	}
+	return result, nil
+}
+
 func PrintLogo() {
 	fmt.Println(LogoStyle.Render(`  _       __    ___ 
- | |     / /   /   |
- | | /| / /   / /| |
- | |/ |/ /   / / | |
- |__/|__/   /_/  |_|`))
+  | |     / /   /   |
+  | | /| / /   / /| |
+  | |/ |/ /   / / | |
+  |__/|__/   /_/  |_|`))
 	fmt.Println(SubtitleStyle.Render("  OpenCode AI Configuration Tool"))
 	fmt.Println()
 }
