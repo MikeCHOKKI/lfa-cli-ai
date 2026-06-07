@@ -502,14 +502,6 @@ func startInstallCmd() tea.Cmd {
 	}
 }
 
-func startDeployCmd() tea.Cmd {
-	return func() tea.Msg {
-		o := detect.DetectOS()
-		err := installer.DeployConfig(o, true)
-		return deployDoneMsg{err: err}
-	}
-}
-
 func startDeployCmdWithPG(host, port, user, password, dbname string) tea.Cmd {
 	return func() tea.Msg {
 		o := detect.DetectOS()
